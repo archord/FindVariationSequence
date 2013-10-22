@@ -11,6 +11,7 @@ using namespace std;
 
 #include "FindVariationSequence.h"
 #include <stdio.h>
+#include "utils.h"
 
 void printHelp();
 
@@ -25,8 +26,18 @@ int main(int argc, char** argv) {
     float errorBox = atof(argv[4]);
     FindVariationSequence *varseq = new FindVariationSequence();
     varseq->batchMatch(argv[1], argv[2], argv[3], errorBox, argv[5]);
-//    long tmp = varseq->readTime("20130111_177d550752_60d851283-420.fit");
-//    printf("time=%d\n", tmp);
+
+    
+//    const char *jdStr="2013-01-11T18:26:22";
+//    double ddate1 = calJulianDay(jdStr);
+//    printf("time=%f\n", ddate1);
+//    
+//    char jdStr2[128];
+//    char *fitsName = "20130111_177d550752_60d851283-420.fit";
+//    char *attrName = "DATE-OBS";
+//    readFitsAttrStr(fitsName, attrName, jdStr2);
+//    double ddate2 = calJulianDay(jdStr2);
+//    printf("time=%f\n", ddate2);
     
     return 0;
 }

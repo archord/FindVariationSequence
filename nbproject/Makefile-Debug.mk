@@ -36,7 +36,8 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/FindVariationSequence.o \
-	${OBJECTDIR}/main.o
+	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/utils.o
 
 
 # C Compiler Flags
@@ -53,7 +54,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L. -L../../../software/cfitsio/cfitsio
+LDLIBSOPTIONS=-L. -L../../../software/cfitsio/cfitsio -L../../../software/lib
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -72,6 +73,11 @@ ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
+
+${OBJECTDIR}/utils.o: utils.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -MMD -MP -MF $@.d -o ${OBJECTDIR}/utils.o utils.cpp
 
 # Subprojects
 .build-subprojects:

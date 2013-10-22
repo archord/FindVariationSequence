@@ -43,7 +43,7 @@ public:
     cm_star *readStdFile(char *fName, int &starNum);
 
     void batchMatch(char *reffName, char *stdfName, char *objListfName, float errorBox, char *outDir);
-    long readTime(char *fitsName);
+    
 private:
     static const int DiffStarDistance = 3;
     static const int DiffStarDistance1 = 3;

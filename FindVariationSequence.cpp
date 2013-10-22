@@ -10,7 +10,6 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-#include "fitsio.h"
 #include "FindVariationSequence.h"
 
 FindVariationSequence::FindVariationSequence() {
@@ -23,7 +22,8 @@ FindVariationSequence::~FindVariationSequence() {
 }
 
 void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
-        char *objListfName, float errorBox, char *outDir) {
+        char *objListfName, float errorBox, char *vsOutDir, char *outDir2,
+        int avgN, int trms) {
 
     printf("starting match...\n");
 
@@ -101,12 +101,12 @@ void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
     refZones->freeZoneArray();
 
     printf("match All file done, starting write result to file...\n");
-    return;
+    
     int newFileCount = 0;
     char *outfName = (char *) malloc(sizeof (char)*MaxStringLength);
     for (i = 0; i < refStarNum; i++) {
         if (0 != vsRst[i].rcdNum) {
-            sprintf(outfName, "%s/abc_%f_%f_%.3f.cat", outDir, vsRst[i].refX, vsRst[i].refY, vsRst[i].refmag);
+            sprintf(outfName, "%s/abc_%f_%f_%.3f.cat", vsOutDir, vsRst[i].refX, vsRst[i].refY, vsRst[i].refmag);
             FILE *fp = fopen(outfName, "w");
             fprintf(fp, "#reference star x\n");
             fprintf(fp, "#reference star y\n");
@@ -264,41 +264,4 @@ cm_star *FindVariationSequence::readRefFile(char *fName, int &starNum) {
 cm_star *FindVariationSequence::readStdFile(char *fName, int &starNum) {
 
     return readStarFile(fName, starNum);
-}
-
-long FindVariationSequence::readTime(char *fitsName) {
-
-    long time;
-    fitsfile *fptr; /* pointer to the FITS file, defined in fitsio.h */
-    int status;
-
-    status = 0;
-
-    if (fits_open_file(&fptr, fitsName, READONLY, &status)) {
-        printf("Open file :%s error!\n", fitsName);
-        if (status) {
-            fits_report_error(stderr, status); /* print error report */
-            exit(status); /* terminate the program, returning error status */
-        }
-        return 0;
-    }
-
-    /* read the NAXIS1 and NAXIS2 keyword to get table size */
-    if (fits_read_key_lng(fptr, "NAXIS1", &time, NULL, &status)) {
-        if (status) {
-            fits_report_error(stderr, status); /* print error report */
-            exit(status); /* terminate the program, returning error status */
-        }
-        return 0;
-    }
-
-    if (fits_close_file(fptr, &status)) {
-        if (status) {
-            fits_report_error(stderr, status); /* print error report */
-            exit(status); /* terminate the program, returning error status */
-        }
-        return 0;
-    }
-
-    return time;
 }
