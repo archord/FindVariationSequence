@@ -43,8 +43,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=
-CXXFLAGS=
+CCFLAGS=-std=c++0x
+CXXFLAGS=-std=c++0x
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -53,7 +53,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L.
+LDLIBSOPTIONS=-L. -L../../../software/cfitsio/cfitsio
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -61,17 +61,17 @@ LDLIBSOPTIONS=-L.
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/findvariationsequence: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/findvariationsequence ${OBJECTFILES} ${LDLIBSOPTIONS} -lm -lCrossMatchLibrary
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/findvariationsequence ${OBJECTFILES} ${LDLIBSOPTIONS} -lm -lCrossMatchLibrary -lcfitsio
 
 ${OBJECTDIR}/FindVariationSequence.o: FindVariationSequence.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../CrossMatchLibrary/src -MMD -MP -MF $@.d -o ${OBJECTDIR}/FindVariationSequence.o FindVariationSequence.cpp
+	$(COMPILE.cc) -g -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -MMD -MP -MF $@.d -o ${OBJECTDIR}/FindVariationSequence.o FindVariationSequence.cpp
 
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../CrossMatchLibrary/src -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -g -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
 
 # Subprojects
 .build-subprojects:

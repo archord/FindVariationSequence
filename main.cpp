@@ -25,6 +25,8 @@ int main(int argc, char** argv) {
     float errorBox = atof(argv[4]);
     FindVariationSequence *varseq = new FindVariationSequence();
     varseq->batchMatch(argv[1], argv[2], argv[3], errorBox, argv[5]);
+//    long tmp = varseq->readTime("20130111_177d550752_60d851283-420.fit");
+//    printf("time=%d\n", tmp);
     
     return 0;
 }

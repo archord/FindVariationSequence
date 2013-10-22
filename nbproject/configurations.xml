@@ -41,14 +41,17 @@
         <ccTool>
           <incDir>
             <pElem>../CrossMatchLibrary/src</pElem>
+            <pElem>../../../software/cfitsio/cfitsio</pElem>
           </incDir>
+          <commandLine>-std=c++0x</commandLine>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/findvariationsequence</output>
           <linkerAddLib>
             <pElem>.</pElem>
+            <pElem>../../../software/cfitsio/cfitsio</pElem>
           </linkerAddLib>
-          <commandLine>-lm -lCrossMatchLibrary</commandLine>
+          <commandLine>-lm -lCrossMatchLibrary -lcfitsio</commandLine>
         </linkerTool>
       </compileType>
       <item path="FindVariationSequence.cpp" ex="false" tool="1" flavor2="0">

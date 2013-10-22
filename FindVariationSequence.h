@@ -30,6 +30,9 @@ typedef struct VS_RESULT {
     long rcdNum;
 } vs_result;
 
+#define MAX_MAG 30
+#define OUTFILE_PREFIX "glc"
+
 class FindVariationSequence : CrossMatch {
 public:
     FindVariationSequence();
@@ -40,6 +43,7 @@ public:
     cm_star *readStdFile(char *fName, int &starNum);
 
     void batchMatch(char *reffName, char *stdfName, char *objListfName, float errorBox, char *outDir);
+    long readTime(char *fitsName);
 private:
     static const int DiffStarDistance = 3;
     static const int DiffStarDistance1 = 3;

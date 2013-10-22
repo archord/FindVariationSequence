@@ -10,6 +10,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include "fitsio.h"
 #include "FindVariationSequence.h"
 
 FindVariationSequence::FindVariationSequence() {
@@ -75,7 +76,7 @@ void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
 
         nextStar = obj;
         while (nextStar) {
-            if (NULL != nextStar->match) {
+            if (NULL != nextStar->match && nextStar->mag < MAX_MAG) {
                 cm_star *tRefStar = nextStar->match;
                 cm_star *tStdStar = tRefStar->match;
                 objZones->getMatchStar(tStdStar);
@@ -94,43 +95,49 @@ void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
         }
         freeStarList(obj);
         objZones->freeZoneArray();
+        //if (objFileNum % 100 == 1)
+        printf("done %dth star list\n", i+1);
     }
     refZones->freeZoneArray();
 
-    printf("match All file done, starting write result two file...\n");
-
-    objIdx = 0;
+    printf("match All file done, starting write result to file...\n");
+    return;
+    int newFileCount = 0;
     char *outfName = (char *) malloc(sizeof (char)*MaxStringLength);
     for (i = 0; i < refStarNum; i++) {
-        sprintf(outfName, "%s/VariationSequence_%f_%f_%.3f.cat", outDir, vsRst[i].refX, vsRst[i].refY, vsRst[i].refmag);
-        FILE *fp = fopen(outfName, "w");
-        fprintf(fp, "#reference star x\n");
-        fprintf(fp, "#reference star y\n");
-        fprintf(fp, "#reference star mag\n");
-        fprintf(fp, "#standrad star x\n");
-        fprintf(fp, "#standrad star y\n");
-        fprintf(fp, "#standrad star mag\n");
-        fprintf(fp, "%f\n", vsRst[i].refX);
-        fprintf(fp, "%f\n", vsRst[i].refY);
-        fprintf(fp, "%f\n", vsRst[i].refmag);
-        fprintf(fp, "%f\n", vsRst[i].stdX);
-        fprintf(fp, "%f\n", vsRst[i].stdY);
-        fprintf(fp, "%f\n", vsRst[i].stdmag);
-        fprintf(fp, "\n");
-        fprintf(fp, "#total star: %d\n", vsRst[i].rcdNum);
-        fprintf(fp, "#time\trefMatchMag\trefMatchMagErr\tstdMatchMag\tstdMatchMagErr\n");
+        if (0 != vsRst[i].rcdNum) {
+            sprintf(outfName, "%s/abc_%f_%f_%.3f.cat", outDir, vsRst[i].refX, vsRst[i].refY, vsRst[i].refmag);
+            FILE *fp = fopen(outfName, "w");
+            fprintf(fp, "#reference star x\n");
+            fprintf(fp, "#reference star y\n");
+            fprintf(fp, "#reference star mag\n");
+            fprintf(fp, "#standrad star x\n");
+            fprintf(fp, "#standrad star y\n");
+            fprintf(fp, "#standrad star mag\n");
+            fprintf(fp, "%f\n", vsRst[i].refX);
+            fprintf(fp, "%f\n", vsRst[i].refY);
+            fprintf(fp, "%f\n", vsRst[i].refmag);
+            fprintf(fp, "%f\n", vsRst[i].stdX);
+            fprintf(fp, "%f\n", vsRst[i].stdY);
+            fprintf(fp, "%f\n", vsRst[i].stdmag);
+            fprintf(fp, "\n");
+            fprintf(fp, "#total star: %d\n", vsRst[i].rcdNum);
+            fprintf(fp, "#time\trefMatchMag\trefMatchMagErr\tstdMatchMag\tstdMatchMagErr\n");
 
 
-        long curMatchCnt = vsRst[i].rcdNum;
-        match_mag_rcd *curMatchPeer = vsRst[i].rcdlst;
-        int j;
-        for (j = 0; j < curMatchCnt; j++) {
-            fprintf(fp, "%f\t%f\t%f\t%f\t%f\n", curMatchPeer[j].time,
-                    curMatchPeer[j].refMchMag, curMatchPeer[j].refMchMagErr,
-                    curMatchPeer[j].stdMchMag, curMatchPeer[j].refMchMagErr);
+            long curMatchCnt = vsRst[i].rcdNum;
+            match_mag_rcd *curMatchPeer = vsRst[i].rcdlst;
+            int j;
+            for (j = 0; j < curMatchCnt; j++) {
+                fprintf(fp, "%f\t%f\t%f\t%f\t%f\n", curMatchPeer[j].time,
+                        curMatchPeer[j].refMchMag, curMatchPeer[j].refMchMagErr,
+                        curMatchPeer[j].stdMchMag, curMatchPeer[j].refMchMagErr);
+            }
+            fclose(fp);
+            newFileCount ++;
         }
-        fclose(fp);
     }
+    printf("total generate %d variation sequence file\n", newFileCount);
 
     free(outfName);
     freeAllFileName(objfNames, objFileNum);
@@ -143,7 +150,7 @@ void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
     freeStarList(std);
     freeStarList(ref);
     printf("write file done\n");
-    
+
 }
 
 char **FindVariationSequence::getAllObjFileName(char *fName, int &fileNum) {
@@ -257,4 +264,41 @@ cm_star *FindVariationSequence::readRefFile(char *fName, int &starNum) {
 cm_star *FindVariationSequence::readStdFile(char *fName, int &starNum) {
 
     return readStarFile(fName, starNum);
+}
+
+long FindVariationSequence::readTime(char *fitsName) {
+
+    long time;
+    fitsfile *fptr; /* pointer to the FITS file, defined in fitsio.h */
+    int status;
+
+    status = 0;
+
+    if (fits_open_file(&fptr, fitsName, READONLY, &status)) {
+        printf("Open file :%s error!\n", fitsName);
+        if (status) {
+            fits_report_error(stderr, status); /* print error report */
+            exit(status); /* terminate the program, returning error status */
+        }
+        return 0;
+    }
+
+    /* read the NAXIS1 and NAXIS2 keyword to get table size */
+    if (fits_read_key_lng(fptr, "NAXIS1", &time, NULL, &status)) {
+        if (status) {
+            fits_report_error(stderr, status); /* print error report */
+            exit(status); /* terminate the program, returning error status */
+        }
+        return 0;
+    }
+
+    if (fits_close_file(fptr, &status)) {
+        if (status) {
+            fits_report_error(stderr, status); /* print error report */
+            exit(status); /* terminate the program, returning error status */
+        }
+        return 0;
+    }
+
+    return time;
 }
