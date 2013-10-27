@@ -10,7 +10,10 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include "fitsio.h"
 #include "FindVariationSequence.h"
+#include "utils.h"
+#include "CircleList.h"
 
 FindVariationSequence::FindVariationSequence() {
 }
@@ -23,7 +26,7 @@ FindVariationSequence::~FindVariationSequence() {
 
 void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
         char *objListfName, float errorBox, char *vsOutDir, char *outDir2,
-        int avgN, int trms) {
+        int headN, float trms) {
 
     printf("starting match...\n");
 
@@ -49,10 +52,20 @@ void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
         vsRst[objIdx].stdY = nextStar->match->pixy;
         vsRst[objIdx].stdmag = nextStar->match->mag;
         vsRst[objIdx].rcdlst = (match_mag_rcd *) malloc(sizeof (match_mag_rcd) * objFileNum);
+        memset(vsRst[objIdx].rcdlst, 0, sizeof (match_mag_rcd) * objFileNum);
         vsRst[objIdx].rcdNum = 0;
         objIdx++;
         nextStar = nextStar->next;
     }
+
+    float maxMem = (sizeof (cm_star) * stdStarNum + sizeof (cm_star) * refStarNum +
+            sizeof (cm_star) * refStarNum + sizeof (vs_result) * refStarNum +
+            30 * objFileNum + sizeof (match_mag_rcd) * refStarNum * objFileNum)/(1024*1024.0);
+    float maxMem1K = (sizeof (cm_star) * stdStarNum + sizeof (cm_star) * refStarNum +
+            sizeof (cm_star) * refStarNum + sizeof (vs_result) * refStarNum +
+            30 * 1000 + sizeof (match_mag_rcd) * refStarNum * 1000)/(1024*1024.0);
+    printf("need memory %.3fMB\n", maxMem);
+    printf("if 1000 object file, need memory %.3fMB\n", maxMem1K);
 
     float minZoneLen = errorBox * TimesOfErrorRadius;
     float searchRds = errorBox;
@@ -61,8 +74,23 @@ void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
     refZones->partitonStarField(ref, refStarNum);
     ref = NULL;
 
+    int tap = 0;
+    if (objFileNum < 40)
+        tap = 2;
+    else if (objFileNum < 100) {
+        tap = 5;
+    } else {
+        tap = objFileNum / 20;
+    }
+
     for (i = 0; i < objFileNum; i++) {
         int objStarNum = 0;
+        char fitsName[MaxStringLength];
+        int fitsNameIdx = strchr(objfNames[i], '.') - objfNames[i] + 4;
+        strncpy(fitsName, objfNames[i], fitsNameIdx);
+        fitsName[fitsNameIdx] = '\0';
+        double time = getImageTime(fitsName);
+
         cm_star *obj = readObjFile(objfNames[i], objStarNum);
         cm_star *obj2 = copyStarList(obj);
         objZones->partitonStarField(obj2, refStarNum);
@@ -83,7 +111,7 @@ void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
                 if (NULL != tStdStar->match) {
                     long curMatchCnt = vsRst[tRefStar->id].rcdNum;
                     match_mag_rcd *curMatchPeer = vsRst[tRefStar->id].rcdlst;
-                    curMatchPeer[curMatchCnt].time = 0;
+                    curMatchPeer[curMatchCnt].time = time;
                     curMatchPeer[curMatchCnt].refMchMag = nextStar->mag;
                     curMatchPeer[curMatchCnt].refMchMagErr = nextStar->mage;
                     curMatchPeer[curMatchCnt].stdMchMag = tStdStar->match->mag;
@@ -95,18 +123,35 @@ void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
         }
         freeStarList(obj);
         objZones->freeZoneArray();
-        //if (objFileNum % 100 == 1)
-        printf("done %dth star list\n", i+1);
+
+        if ((i < 3) || (i % tap == 0) || (i == objFileNum - 1))
+            printf("done %dth star list\n", i + 1);
     }
     refZones->freeZoneArray();
 
     printf("match All file done, starting write result to file...\n");
-    
+
     int newFileCount = 0;
+    int breakfile = 0;
     char *outfName = (char *) malloc(sizeof (char)*MaxStringLength);
+    char *outfName2 = (char *) malloc(sizeof (char)*MaxStringLength);
     for (i = 0; i < refStarNum; i++) {
         if (0 != vsRst[i].rcdNum) {
-            sprintf(outfName, "%s/abc_%f_%f_%.3f.cat", vsOutDir, vsRst[i].refX, vsRst[i].refY, vsRst[i].refmag);
+            long curMatchCnt = vsRst[i].rcdNum;
+            match_mag_rcd *curMatchPeer = vsRst[i].rcdlst;
+            int j;
+            CircleList *clst = new CircleList(headN);
+            for (j = 0; j < curMatchCnt; j++) {
+                if (j >= headN) {
+                    curMatchPeer[j].aheadNAvg = clst->getAvg();
+                    curMatchPeer[j].aheadNRms = clst->getRms();
+                }
+                clst->add(curMatchPeer[j].refMchMag);
+            }
+
+#ifdef WITH_VS
+            sprintf(outfName, "%s/%s_%f_%f_%.3f.cat", vsOutDir, OUTFILE_PREFIX,
+                    vsRst[i].refX, vsRst[i].refY, vsRst[i].refmag);
             FILE *fp = fopen(outfName, "w");
             fprintf(fp, "#reference star x\n");
             fprintf(fp, "#reference star y\n");
@@ -122,24 +167,66 @@ void FindVariationSequence::batchMatch(char *reffName, char *stdfName,
             fprintf(fp, "%f\n", vsRst[i].stdmag);
             fprintf(fp, "\n");
             fprintf(fp, "#total star: %d\n", vsRst[i].rcdNum);
-            fprintf(fp, "#time\trefMatchMag\trefMatchMagErr\tstdMatchMag\tstdMatchMagErr\n");
+            fprintf(fp, "#time refMatchMag refMatchMagErr stdMatchMag "
+                    "stdMatchMagErr aheadNavg aheadNrms\n");
 
-
-            long curMatchCnt = vsRst[i].rcdNum;
-            match_mag_rcd *curMatchPeer = vsRst[i].rcdlst;
-            int j;
             for (j = 0; j < curMatchCnt; j++) {
-                fprintf(fp, "%f\t%f\t%f\t%f\t%f\n", curMatchPeer[j].time,
+                fprintf(fp, "%.8f %f %f %f %f %f %f\n", curMatchPeer[j].time,
                         curMatchPeer[j].refMchMag, curMatchPeer[j].refMchMagErr,
-                        curMatchPeer[j].stdMchMag, curMatchPeer[j].refMchMagErr);
+                        curMatchPeer[j].stdMchMag, curMatchPeer[j].refMchMagErr,
+                        curMatchPeer[j].aheadNAvg, curMatchPeer[j].aheadNRms);
             }
             fclose(fp);
-            newFileCount ++;
+#endif
+            int breakflag = 0;
+            if (curMatchCnt > headN) {
+                FILE *fp2 = NULL;
+                sprintf(outfName2, "%s/%s_%f_%f_%.3f.cat.break", outDir2,
+                        OUTFILE_PREFIX, vsRst[i].refX, vsRst[i].refY, vsRst[i].refmag);
+                for (j = 0; j < curMatchCnt; j++) {
+                    if (j >= headN) {
+                        if (curMatchPeer[j].refMchMag > curMatchPeer[j].aheadNAvg +
+                                trms * curMatchPeer[j].aheadNRms) {
+                            breakflag++;
+                        } else {
+                            breakflag = 0;
+                        }
+                        if (breakflag == 2) {
+                            if (NULL == fp2) {
+                                breakfile++;
+                                fp2 = fopen(outfName2, "w");
+                                fprintf(fp2, "#time refMatchMag refMatchMagErr "
+                                        "stdMatchMag stdMatchMagErr aheadNavg aheadNrms\n");
+                            }
+                            fprintf(fp2, "%.8f %f %f %f %f %f %f\n", curMatchPeer[j - 1].time,
+                                    curMatchPeer[j - 1].refMchMag, curMatchPeer[j - 1].refMchMagErr,
+                                    curMatchPeer[j - 1].stdMchMag, curMatchPeer[j - 1].refMchMagErr,
+                                    curMatchPeer[j - 1].aheadNAvg, curMatchPeer[j - 1].aheadNRms);
+                            fprintf(fp2, "%.8f %f %f %f %f %f %f\n", curMatchPeer[j].time,
+                                    curMatchPeer[j].refMchMag, curMatchPeer[j].refMchMagErr,
+                                    curMatchPeer[j].stdMchMag, curMatchPeer[j].refMchMagErr,
+                                    curMatchPeer[j].aheadNAvg, curMatchPeer[j].aheadNRms);
+                        } else if (breakflag > 2) {
+                            fprintf(fp2, "%.8f %f %f %f %f %f %f\n", curMatchPeer[j].time,
+                                    curMatchPeer[j].refMchMag, curMatchPeer[j].refMchMagErr,
+                                    curMatchPeer[j].stdMchMag, curMatchPeer[j].refMchMagErr,
+                                    curMatchPeer[j].aheadNAvg, curMatchPeer[j].aheadNRms);
+                        }
+                    }
+                }
+                if (NULL != fp2) {
+                    fclose(fp2);
+                }
+            }
+            newFileCount++;
+            clst->freeList();
         }
     }
     printf("total generate %d variation sequence file\n", newFileCount);
+    printf("total generate %d break file\n", breakfile);
 
     free(outfName);
+    free(outfName2);
     freeAllFileName(objfNames, objFileNum);
 
     for (i = 0; i < refStarNum; i++) {
@@ -264,4 +351,50 @@ cm_star *FindVariationSequence::readRefFile(char *fName, int &starNum) {
 cm_star *FindVariationSequence::readStdFile(char *fName, int &starNum) {
 
     return readStarFile(fName, starNum);
+}
+
+double FindVariationSequence::getImageTime(char *fitsName) {
+
+    char *starTimeStr = "DATE-OBS";
+    char *expTimeStr = "EXPTIME";
+    char jdStr[128];
+    float expTime = 0.0;
+
+    fitsfile *fptr; /* pointer to the FITS file, defined in fitsio.h */
+    int status = 0;
+
+    if (fits_open_file(&fptr, fitsName, READONLY, &status)) {
+        printf("Open file :%s error!\n", fitsName);
+        if (status) {
+            fits_report_error(stderr, status); /* print error report */
+            exit(status); /* terminate the program, returning error status */
+        }
+    }
+
+    /* read the NAXIS1 and NAXIS2 keyword to get table size */
+    if (fits_read_key_str(fptr, starTimeStr, jdStr, NULL, &status)) {
+        if (status) {
+            fits_report_error(stderr, status); /* print error report */
+            exit(status); /* terminate the program, returning error status */
+        }
+    }
+
+    /* read the NAXIS1 and NAXIS2 keyword to get table size */
+    if (fits_read_key_flt(fptr, expTimeStr, &expTime, NULL, &status)) {
+        if (status) {
+            fits_report_error(stderr, status); /* print error report */
+            exit(status); /* terminate the program, returning error status */
+        }
+    }
+
+    if (fits_close_file(fptr, &status)) {
+        if (status) {
+            fits_report_error(stderr, status); /* print error report */
+            exit(status); /* terminate the program, returning error status */
+        }
+    }
+
+    double ddate = calJulianDay(jdStr);
+
+    return ddate + expTime / (2 * 86400.0);
 }

@@ -28,8 +28,11 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}" data/referance.cat data/standrad.cat data/objfilelist.cat 0.6</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" data/referance.cat data/standrad.cat data/objfilelist.cat 0.6 result</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" data/referance.cat data/standrad.cat data/objfilelist.cat 0.7 result</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" data/referance.cat data/standrad.cat data/objfilelist.cat 0.7 result result2 30 3</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" data/referance.cat data/standrad.cat data/objfilelist.cat 0.7 result result2 3 2</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" data/referance.cat data/standrad.cat data/objfilelist.cat 0.7 result result2 3 3</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" data/referance.cat data/standrad.cat data/objfilelist.cat 0.7 result</runcommand>
+        <runcommand>"${OUTPUT_PATH}" data/referance.cat data/standrad.cat data/objfilelist.cat 0.7 result result2 3 3</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>

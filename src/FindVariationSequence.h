@@ -11,11 +11,13 @@
 #include "CrossMatch.h"
 
 typedef struct MATCH_MAG_RECORD {
-    float time;
+    double time;
     float refMchMag;
     float refMchMagErr;
     float stdMchMag;
     float stdMchMagErr;
+    float aheadNAvg;
+    float aheadNRms;
 } match_mag_rcd;
 
 
@@ -32,6 +34,7 @@ typedef struct VS_RESULT {
 
 #define MAX_MAG 30
 #define OUTFILE_PREFIX "glc"
+#define WITH_VS
 
 class FindVariationSequence : CrossMatch {
 public:
@@ -42,7 +45,10 @@ public:
     cm_star *readRefFile(char *fName, int &starNum);
     cm_star *readStdFile(char *fName, int &starNum);
 
-    void batchMatch(char *reffName, char *stdfName, char *objListfName, float errorBox, char *outDir);
+    void batchMatch(char *reffName, char *stdfName,
+        char *objListfName, float errorBox, char *vsOutDir, char *outDir2,
+        int headN, float trms);
+    double getImageTime(char *fitsName);
     
 private:
     static const int DiffStarDistance = 3;

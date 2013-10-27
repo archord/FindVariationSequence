@@ -30,7 +30,7 @@ double calJulianDay(const char *jdStr) {
 
     return (floor(365.25 * y) +
             floor(30.6001 * (m + 1)) + B + 1720996.5 +
-            jd.day + jd.hour / 24.0 + jd.minute / 1440.0 + (double)jd.second / 86400.0);
+            jd.day + (double)jd.hour / 24.0 + (double)jd.minute / 1440.0 + (double)jd.second / 86400.0);
 
 }
 
@@ -46,11 +46,8 @@ void strToJD(const char *jdStr, jl_day &jd){
 
 void readFitsAttrStr(char *fitsName, char *strName, char *strVal) {
 
-    long time;
     fitsfile *fptr; /* pointer to the FITS file, defined in fitsio.h */
-    int status;
-
-    status = 0;
+    int status = 0;
 
     if (fits_open_file(&fptr, fitsName, READONLY, &status)) {
         printf("Open file :%s error!\n", fitsName);
@@ -63,6 +60,38 @@ void readFitsAttrStr(char *fitsName, char *strName, char *strVal) {
 
     /* read the NAXIS1 and NAXIS2 keyword to get table size */
     if (fits_read_key_str(fptr, strName, strVal, NULL, &status)) {
+        if (status) {
+            fits_report_error(stderr, status); /* print error report */
+            exit(status); /* terminate the program, returning error status */
+        }
+        return;
+    }
+
+    if (fits_close_file(fptr, &status)) {
+        if (status) {
+            fits_report_error(stderr, status); /* print error report */
+            exit(status); /* terminate the program, returning error status */
+        }
+        return;
+    }
+}
+
+void readFitsAttrFloat(char *fitsName, char *strName, float &fltVal) {
+
+    fitsfile *fptr; /* pointer to the FITS file, defined in fitsio.h */
+    int status = 0;
+
+    if (fits_open_file(&fptr, fitsName, READONLY, &status)) {
+        printf("Open file :%s error!\n", fitsName);
+        if (status) {
+            fits_report_error(stderr, status); /* print error report */
+            exit(status); /* terminate the program, returning error status */
+        }
+        return;
+    }
+
+    /* read the NAXIS1 and NAXIS2 keyword to get table size */
+    if (fits_read_key_flt(fptr, strName, &fltVal, NULL, &status)) {
         if (status) {
             fits_report_error(stderr, status); /* print error report */
             exit(status); /* terminate the program, returning error status */

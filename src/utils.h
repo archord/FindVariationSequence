@@ -19,6 +19,7 @@ typedef struct JULIAN_DAY{
 
 double calJulianDay(const char *jdStr);
 void readFitsAttrStr(char *fitsName, char *strName, char *strVal);
+void readFitsAttrFloat(char *fitsName, char *strName, float &fltVal);
 
 #endif	/* UTILS_H */
 

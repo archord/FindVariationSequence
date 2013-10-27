@@ -8,25 +8,29 @@
 #ifndef CIRCLELIST_H
 #define	CIRCLELIST_H
 
-typedef struct CIRCLE_LIST{
-    float value;
-    struct CIRCLE_LIST *prev;
-    struct CIRCLE_LIST *next;
-} circle_lst;
 
 class CircleList {
 public:
-    CircleList();
-    CircleList(const CircleList& orig);
+    CircleList(int len);
     virtual ~CircleList();
+    
+    void add(float elm);
+    void listSum();
+    void listAvg();
+    void listRms();
+    void freeList();
+    float getRms() const;
+    float getAvg() const;
+    float getSum() const;
 private:
     int length;
-    float total;
+    int curElmNum;
+    int curIdx;
+    float *circleList;
+    float sum;
     float avg;
     float rms;
-    circle_lst *head;
-    circle_lst *tail;
-    circle_lst *cur;
+    float lastElm;
 
 };
 
