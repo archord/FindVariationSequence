@@ -51,8 +51,8 @@ TESTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=
-CXXFLAGS=
+CCFLAGS=-std=c++0x
+CXXFLAGS=-std=c++0x
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -61,7 +61,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=-L. -L../../../software/cfitsio/cfitsio -L../../../software/lib
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -69,27 +69,27 @@ LDLIBSOPTIONS=
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/findvariationsequence: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/findvariationsequence ${OBJECTFILES} ${LDLIBSOPTIONS}
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/findvariationsequence ${OBJECTFILES} ${LDLIBSOPTIONS} -lm -lCrossMatchLibrary -lcfitsio
 
 ${OBJECTDIR}/src/CircleList.o: src/CircleList.cpp 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/CircleList.o src/CircleList.cpp
+	$(COMPILE.cc) -O2 -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/CircleList.o src/CircleList.cpp
 
 ${OBJECTDIR}/src/FindVariationSequence.o: src/FindVariationSequence.cpp 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/FindVariationSequence.o src/FindVariationSequence.cpp
+	$(COMPILE.cc) -O2 -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/FindVariationSequence.o src/FindVariationSequence.cpp
 
 ${OBJECTDIR}/src/main.o: src/main.cpp 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/main.o src/main.cpp
+	$(COMPILE.cc) -O2 -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/main.o src/main.cpp
 
 ${OBJECTDIR}/src/utils.o: src/utils.cpp 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/utils.o src/utils.cpp
+	$(COMPILE.cc) -O2 -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/utils.o src/utils.cpp
 
 # Subprojects
 .build-subprojects:
@@ -104,7 +104,7 @@ ${TESTDIR}/TestFiles/f1: ${TESTDIR}/tests/TestCircleList.o ${OBJECTFILES:%.o=%_n
 ${TESTDIR}/tests/TestCircleList.o: tests/TestCircleList.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I. -I. -MMD -MP -MF $@.d -o ${TESTDIR}/tests/TestCircleList.o tests/TestCircleList.cpp
+	$(COMPILE.cc) -O2 -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -I. -I. -std=c++0x -MMD -MP -MF $@.d -o ${TESTDIR}/tests/TestCircleList.o tests/TestCircleList.cpp
 
 
 ${OBJECTDIR}/src/CircleList_nomain.o: ${OBJECTDIR}/src/CircleList.o src/CircleList.cpp 
@@ -115,7 +115,7 @@ ${OBJECTDIR}/src/CircleList_nomain.o: ${OBJECTDIR}/src/CircleList.o src/CircleLi
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/CircleList_nomain.o src/CircleList.cpp;\
+	    $(COMPILE.cc) -O2 -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/CircleList_nomain.o src/CircleList.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/src/CircleList.o ${OBJECTDIR}/src/CircleList_nomain.o;\
 	fi
@@ -128,7 +128,7 @@ ${OBJECTDIR}/src/FindVariationSequence_nomain.o: ${OBJECTDIR}/src/FindVariationS
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/FindVariationSequence_nomain.o src/FindVariationSequence.cpp;\
+	    $(COMPILE.cc) -O2 -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/FindVariationSequence_nomain.o src/FindVariationSequence.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/src/FindVariationSequence.o ${OBJECTDIR}/src/FindVariationSequence_nomain.o;\
 	fi
@@ -141,7 +141,7 @@ ${OBJECTDIR}/src/main_nomain.o: ${OBJECTDIR}/src/main.o src/main.cpp
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/main_nomain.o src/main.cpp;\
+	    $(COMPILE.cc) -O2 -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/main_nomain.o src/main.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/src/main.o ${OBJECTDIR}/src/main_nomain.o;\
 	fi
@@ -154,7 +154,7 @@ ${OBJECTDIR}/src/utils_nomain.o: ${OBJECTDIR}/src/utils.o src/utils.cpp
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/utils_nomain.o src/utils.cpp;\
+	    $(COMPILE.cc) -O2 -I../CrossMatchLibrary/src -I../../../software/cfitsio/cfitsio -std=c++0x -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/utils_nomain.o src/utils.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/src/utils.o ${OBJECTDIR}/src/utils_nomain.o;\
 	fi
