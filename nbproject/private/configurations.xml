@@ -66,8 +66,9 @@
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" data referance.cat standrad.cat objfilelist.cat 0.7 result result2 3 3</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" data referance.cat standrad.cat objfilelist.cat 0.7 result result2 3 3 3</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" data referance.cat standrad.cat objfilelist.cat 0.7 result result2 3 3</runcommand>
+        <runcommand>"${OUTPUT_PATH}" data referance.cat standrad.cat objfilelist.cat 0.7 result result2 3 3 3</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>
